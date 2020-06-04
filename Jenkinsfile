@@ -47,7 +47,7 @@ pipeline {
 
     stage('Start New Docker') {
       steps {
-        sh 'docker run -d -p 4802:8085 ' +
+        sh 'docker run -d -p 4802:8080 ' +
             '--restart=always ' +
             '--dns=172.17.0.1 ' +
             '--name weather-master ' +
