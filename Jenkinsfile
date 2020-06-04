@@ -47,7 +47,7 @@ pipeline {
 
     stage('Start New Docker') {
       steps {
-        sh 'docker run -d -p 4801:8085 ' +
+        sh 'docker run -d -p 4802:8085 ' +
             '--restart=always ' +
             '--dns=172.17.0.1 ' +
             '--name weather-master ' +
@@ -64,7 +64,7 @@ pipeline {
               returnStdout: true,
               script: "docker inspect weather-master | jq '.[].NetworkSettings.Networks.bridge.IPAddress'"
           )
-          def service = readJSON text: '{ "Port": 3000 }'
+          def service = readJSON text: '{ "Port": 4802 }'
           service["Address"] = ip.toString().trim() replaceAll("\"", "");
           service["Name"] = "weather-master".toString()
           writeJSON file: 'service.json', json: service, pretty: 3
