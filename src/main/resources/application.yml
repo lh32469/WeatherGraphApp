@@ -1,0 +1,10 @@
+server:
+  servlet:
+    contextPath: /weather
+  http2:
+    enabled: true
+
+logging:
+  pattern:
+    dateformat: MM-dd HH:mm:ss.SSS,America/Los_Angeles
+
