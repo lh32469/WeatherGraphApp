@@ -1,5 +1,8 @@
 package org.gpc4j.weather;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import generated.Ob;
 import generated.Station;
 import generated.Variable;
@@ -9,19 +12,21 @@ import org.primefaces.model.chart.LineChartModel;
 import org.primefaces.model.chart.LineChartSeries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.annotation.RequestScope;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Named;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
-import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,8 +38,9 @@ import java.util.Optional;
 @RequestScope
 public class StationBean {
 
-  String site = "https://www.wrh.noaa.gov/mesowest/"
-      + "getobextXml.php?sid=KPDX&num=48";
+  static final String fiveMinute =
+      "https://api.mesowest.net/v2/stations/timeseries?stid=KPDX&recent=4320&obtimezone=local&complete=1&hfmetars=1&token=d8c6aee36a994f90857925cea26934be";
+
 
   private Station station;
 
@@ -52,22 +58,22 @@ public class StationBean {
 
 
   @PostConstruct
-  public void postConstruct() {
-    try {
-      LOG.info("Start...");
+  public void postConstruct() throws IOException {
+    LOG.info("Start...");
 
-      URL url = new URL(site);
-      JAXBContext jc = JAXBContext.newInstance(Station.class);
-      Unmarshaller um = jc.createUnmarshaller();
 
-      station = (Station) um.unmarshal(url);
+    RestTemplate restTemplate = new RestTemplate();
+    ResponseEntity<String> response =
+        restTemplate.exchange(fiveMinute, HttpMethod.GET, HttpEntity.EMPTY, String.class);
 
-      // Marshaller m = jc.createMarshaller();
-      // m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-      // m.marshal(station, System.out);
-    } catch (IOException | JAXBException ex) {
-      LOG.error(site, ex);
-    }
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode json = mapper.reader().readTree(response.getBody());
+    ArrayNode stations = (ArrayNode) json.get("STATION");
+    JsonNode station = stations.get(0);
+    JsonNode observations = station.get("OBSERVATIONS");
+    ArrayNode airTemp = (ArrayNode) observations.get("air_temp_set_1");
+    List<Double> temps = new LinkedList<>();
+    airTemp.forEach(node -> temps.add(node.asDouble() * 9 / 5 + 32));
 
     tempGraph = new LineChartModel();
     tempGraph.setTitle("Temperature");
@@ -85,29 +91,34 @@ public class StationBean {
     LineChartSeries yesterday = new LineChartSeries();
     yesterday.setShowMarker(false);
 
-    Ob latest = station.getOb().get(0);
-    now.setLabel("Today  (" + getTemp(latest) + ")");
-    yesterday.setLabel("Yesterday  ("
-        + getTempHoursAgo(NUM_HOURS_AGO, latest) + ")");
+//    Ob latest = station.getOb().get(0);
+//    now.setLabel("Today  (" + getTemp(latest) + ")");
+//    yesterday.setLabel("Yesterday  ("
+//        + getTempHoursAgo(NUM_HOURS_AGO, latest) + ")");
 
-    Collections.reverse(station.getOb());
+//    Collections.reverse(temps);
 
     int i = 1;
-    for (Ob ob : station.getOb()) {
 
-      int tempNow = Integer.parseInt(getTemp(ob));
 
-      long time = Long.parseLong(ob.getUtime());
-      LocalDateTime ldt = LocalDateTime.ofEpochSecond(time, 0, zone);
+    for (Double temp : temps) {
 
-      int tempYesterday
-          = Integer.parseInt(getTempHoursAgo(NUM_HOURS_AGO, ldt));
+      int tempNow = (int) Math.round(temp);
 
-      if (tempYesterday > 0 && tempNow > 0) {
-        now.set(i, tempNow);
-        yesterday.set(i, tempYesterday);
-        i++;
-      }
+//      long time = Long.parseLong(ob.getUtime());
+//      LocalDateTime ldt = LocalDateTime.ofEpochSecond(time, 0, zone);
+
+//      int tempYesterday
+//          = Integer.parseInt(getTempHoursAgo(NUM_HOURS_AGO, ldt));
+
+
+      now.set(i++, tempNow);
+
+//      if (tempYesterday > 0 && tempNow > 0) {
+//        now.set(i, tempNow);
+//        yesterday.set(i, tempYesterday);
+//        i++;
+//      }
 
     }
 
@@ -115,7 +126,7 @@ public class StationBean {
     //xAxis.setMax(650);
 
     tempGraph.addSeries(now);
-    tempGraph.addSeries(yesterday);
+//    tempGraph.addSeries(yesterday);
   }
 
 
@@ -197,7 +208,7 @@ public class StationBean {
   }
 
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
 
 //        System.setProperty("http.proxyHost",
 //                "http://www-proxy.us.oracle.com");

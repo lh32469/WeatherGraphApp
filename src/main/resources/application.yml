@@ -1,8 +1,30 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
 server:
-  servlet:
-    contextPath: /
+  port: 8085
   http2:
     enabled: true
+
+spring:
+  boot:
+    admin:
+      client:
+        url: http://dell-4290.local:8099
+        auto-deregistration: true
+        instance:
+          prefer-ip: true
+  jackson:
+    serialization:
+      INDENT_OUTPUT: true
+    default-property-inclusion: non_null
+
+joinfaces:
+  jsf:
+    state-saving-method: client
 
 logging:
   pattern:
