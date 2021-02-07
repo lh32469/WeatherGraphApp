@@ -8,6 +8,8 @@ server:
   port: 8085
   http2:
     enabled: true
+  tomcat:
+    redirect-context-root: true
 
 spring:
   boot:
