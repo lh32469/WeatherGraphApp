@@ -1,5 +1,4 @@
-// project should be the last token of the Git repo URL in lowercase.
-def project = "WeatherGraphApp".toLowerCase()
+def project = "weather"
 def port = "8085"
 def branch = BRANCH_NAME.toLowerCase()
 def svcId =  project + "-" + branch + "-" + BUILD_NUMBER
@@ -108,7 +107,7 @@ pipeline {
       steps {
         script {
           running = running.trim()
-          running = running.replace("\n", " ").replace("\r", " ");
+          running = running.replace("\n", " ").replace("\r", " ")
           if(!running.isEmpty()) {
             sh "docker stop $running"
             sh "docker rm $running"
