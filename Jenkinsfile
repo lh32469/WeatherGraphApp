@@ -81,7 +81,7 @@ pipeline {
             '--dns=172.17.0.1 ' +
             "--name $svcId " +
             '-e TZ=America/Los_Angeles ' +
-            "-e SERVER_SERVLET_CONTEXT_PATH=/$project-$branch " +
+            "-e SERVER_SERVLET_CONTEXT_PATH=/$project-$branch/ " +
             "-e BRANCH=$branch " +
             "$project/$branch:$BUILD_NUMBER"
       }
