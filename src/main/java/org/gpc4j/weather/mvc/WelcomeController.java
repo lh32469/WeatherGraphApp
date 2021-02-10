@@ -12,7 +12,7 @@ public class WelcomeController {
 
   @GetMapping()
   public String homePage(Model model) {
-    return "index.xhtml";
+    return "/index.xhtml";
   }
 
 }
