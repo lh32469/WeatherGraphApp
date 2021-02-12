@@ -1,29 +1,30 @@
 package org.gpc4j.weather;
 
-import generated.Ob;
-import generated.Station;
-import generated.Variable;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.gpc4j.weather.dto.TimeSeries;
 import org.primefaces.model.chart.Axis;
 import org.primefaces.model.chart.AxisType;
 import org.primefaces.model.chart.LineChartModel;
 import org.primefaces.model.chart.LineChartSeries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.annotation.RequestScope;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Named;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
-import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 /**
@@ -33,41 +34,40 @@ import java.util.Optional;
 @RequestScope
 public class StationBean {
 
-  String site = "https://www.wrh.noaa.gov/mesowest/"
-      + "getobextXml.php?sid=KPDX&num=48";
-
-  private Station station;
-
+  /**
+   * The Chart/Graph object used by JSF/Primefaces.
+   */
   LineChartModel tempGraph;
 
+
+  public static final DateTimeFormatter DTF
+      = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
+
   /**
-   * Number of hours to look back for comparison.
+   * Readings every five minutes.
    */
-  private static final int NUM_HOURS_AGO = 24;
+  static final String fiveMinute =
+      "https://api.mesowest.net/v2/stations/timeseries?stid=KPDX&recent=4320&obtimezone=local&complete=1&hfmetars=1&token=d8c6aee36a994f90857925cea26934be";
 
-  private static final ZoneOffset zone = ZoneOffset.ofHours(-7);
 
-  final static private Logger LOG
-      = LoggerFactory.getLogger(StationBean.class);
+  final static private Logger LOG = LoggerFactory.getLogger(StationBean.class);
 
 
   @PostConstruct
-  public void postConstruct() {
-    try {
-      LOG.info("Start...");
+  public void postConstruct() throws IOException {
+    LOG.info("Start...");
 
-      URL url = new URL(site);
-      JAXBContext jc = JAXBContext.newInstance(Station.class);
-      Unmarshaller um = jc.createUnmarshaller();
+    RestTemplate restTemplate = new RestTemplate();
+    ResponseEntity<String> response =
+        restTemplate.exchange(fiveMinute, HttpMethod.GET, HttpEntity.EMPTY, String.class);
 
-      station = (Station) um.unmarshal(url);
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+    TimeSeries timeSeries = mapper.readValue(response.getBody(), TimeSeries.class);
+    Map<String, Object> observations = timeSeries.getStation().get(0).getObservations();
 
-      // Marshaller m = jc.createMarshaller();
-      // m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-      // m.marshal(station, System.out);
-    } catch (IOException | JAXBException ex) {
-      LOG.error(site, ex);
-    }
+    Map<ZonedDateTime, Double> timesToTemps = getTimesToTemps(observations);
+    List<String> times = (List<String>) observations.get("date_time");
 
     tempGraph = new LineChartModel();
     tempGraph.setTitle("Temperature");
@@ -81,34 +81,21 @@ public class StationBean {
 
     LineChartSeries now = new LineChartSeries();
     now.setShowMarker(false);
+    now.setLabel("Now");
 
     LineChartSeries yesterday = new LineChartSeries();
     yesterday.setShowMarker(false);
+    yesterday.setLabel("Prev");
 
-    Ob latest = station.getOb().get(0);
-    now.setLabel("Today  (" + getTemp(latest) + ")");
-    yesterday.setLabel("Yesterday  ("
-        + getTempHoursAgo(NUM_HOURS_AGO, latest) + ")");
+    for (int i = 0; i < times.size(); i++) {
+      ZonedDateTime time = ZonedDateTime.parse(times.get(i), DTF);
+      double degF = timesToTemps.get(time) * 9 / 5 + 32;
+      now.set(i, degF);
 
-    Collections.reverse(station.getOb());
-
-    int i = 1;
-    for (Ob ob : station.getOb()) {
-
-      int tempNow = Integer.parseInt(getTemp(ob));
-
-      long time = Long.parseLong(ob.getUtime());
-      LocalDateTime ldt = LocalDateTime.ofEpochSecond(time, 0, zone);
-
-      int tempYesterday
-          = Integer.parseInt(getTempHoursAgo(NUM_HOURS_AGO, ldt));
-
-      if (tempYesterday > 0 && tempNow > 0) {
-        now.set(i, tempNow);
-        yesterday.set(i, tempYesterday);
-        i++;
+      Optional<Double> prev = getTime24HoursAgo(time, timesToTemps);
+      if (prev.isPresent()) {
+        yesterday.set(i, prev.get());
       }
-
     }
 
     xAxis.setMax((now.getData().size()) + 20);
@@ -119,108 +106,84 @@ public class StationBean {
   }
 
 
-  public List<String> getTemps() {
+  /**
+   * Gets the temperature 24 hours prior to the ZonedDateTime provided.
+   * Returns Optional.empty() if no temperature is found.
+   */
+  Optional<Double> getTime24HoursAgo(ZonedDateTime now,
+                                     Map<ZonedDateTime, Double> timesToTemps) {
 
-    List<String> temps
-        = Collections.synchronizedList(new ArrayList<String>());
+    LOG.debug("now = " + now);
+    Optional<ZonedDateTime> prevTemp = Optional.empty();
 
-    station.getOb().forEach(ob -> {
-      ob.getVariable().stream()
-          .filter(v -> v.getVar().equals("T"))
-          .forEach(v -> {
-            temps.add(v.getValue());
-          });
-    });
+    LOG.debug("timesToTemps.keySet().size() = " + timesToTemps.keySet().size());
 
-    Collections.reverse(temps);
-    return temps;
+    // Narrow search area for subsequent search iterations
+    List<ZonedDateTime> searchArea = timesToTemps.keySet().stream()
+        .filter(t -> t.isAfter(now.minusHours(28)))
+        .filter(t -> t.isBefore(now.minusHours(20)))
+        .collect(Collectors.toList());
+
+    LOG.debug("searchArea.size() = " + searchArea.size());
+
+    // Expanding window to catch the closest one first.
+    for (int i = 1; i < 15; i++) {
+
+      ZonedDateTime prevWindowOpen = now.minusHours(24).minusMinutes(i);
+      ZonedDateTime prevWindowClose = now.minusHours(24).plusMinutes(i);
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("Between " + prevWindowOpen + " and " + prevWindowClose);
+      }
+
+      prevTemp = searchArea.stream()
+          .filter(t -> t.isAfter(prevWindowOpen))
+          .filter(t -> t.isBefore(prevWindowClose))
+          .findFirst();
+
+      if (prevTemp.isPresent()) {
+        break;
+      }
+    }
+
+    if (prevTemp.isPresent()) {
+      double degF = timesToTemps.get(prevTemp.get()) * 9 / 5 + 32;
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("prevTemp = " + prevTemp.get() + ", " + degF + " Deg F");
+      }
+      return Optional.of(degF);
+    } else {
+      return Optional.empty();
+    }
+
   }
 
 
   /**
-   * Get the temperature N number of hours ago.
-   *
-   * @param numberOfHoursAgo
-   * @param now
-   * @return
+   * Process the Observations Map provided and return a Map of temperature
+   * reading time to temperature reading in degrees fahrenheit.
    */
-  String getTempHoursAgo(int numberOfHoursAgo, LocalDateTime now) {
+  Map<ZonedDateTime, Double> getTimesToTemps(Map<String, Object> observations) {
 
-    LocalDateTime past = now.plusHours(-numberOfHoursAgo);
-    // System.out.println("Past: " + past);
+    Map<ZonedDateTime, Double> timesToTemps = new HashMap<>();
 
-    Optional<Ob> ago = station.getOb().stream()
-        .filter(ob -> {
-          long time = Long.parseLong(ob.getUtime());
-          LocalDateTime ldt
-              = LocalDateTime.ofEpochSecond(time, 0, zone);
-          return ldt.plusSeconds(15).isAfter(past)
-              && ldt.plusSeconds(-15).isBefore(past);
-        })
-        .findFirst();
+    List<Double> airTemp = (List<Double>) observations.get("air_temp_set_1");
+    List<String> times = (List<String>) observations.get("date_time");
 
-    if (ago.isPresent()) {
-      Ob ob = ago.get();
-      LOG.debug("Found: " + ob.getTime());
-      return getTemp(ob);
+    for (int i = 0; i < times.size(); i++) {
+      String time = times.get(i);
+      ZonedDateTime key = ZonedDateTime.parse(time, DTF);
+      timesToTemps.put(key, airTemp.get(i));
     }
 
-    return "0";
-
+    return timesToTemps;
   }
 
 
-  String getTempHoursAgo(int numberOfHoursAgo, Ob now) {
-
-    long time = Long.parseLong(now.getUtime());
-    LocalDateTime ldt = LocalDateTime.ofEpochSecond(time, 0, zone);
-
-    return getTempHoursAgo(numberOfHoursAgo, ldt);
-  }
-
-
-  String getTemp(Ob ob) {
-    Optional<Variable> temp = ob.getVariable().stream()
-        .filter(v -> v.getVar().equals("T"))
-        .findAny();
-
-    if (temp.isPresent()) {
-      return temp.get().getValue();
-    } else {
-      return "0";
-    }
-  }
-
-
+  /**
+   * JSF Method to get resulting Chart/Graph.
+   */
   public LineChartModel getTempGraph() {
     return tempGraph;
-  }
-
-
-  public static void main(String[] args) {
-
-//        System.setProperty("http.proxyHost",
-//                "http://www-proxy.us.oracle.com");
-//        System.setProperty("http.proxyPort",
-//                "80");
-    StationBean sb = new StationBean();
-    sb.postConstruct();
-
-    // System.out.println("Zones: " + ZoneId.getAvailableZoneIds());
-    sb.station.getOb().stream().forEach(ob -> {
-
-      long time = Long.parseLong(ob.getUtime());
-
-      LocalDateTime ldt
-          = LocalDateTime.ofEpochSecond(time, 0, ZoneOffset.ofHours(-7));
-
-      System.out.println("utime: " + ob.getUtime() + ";  "
-          + ob.getTime() + "; "
-          + sb.getTempHoursAgo(1, ldt) + "; "
-          + ldt);
-    });
-
-    // sb.getTemps().forEach(System.out::println);
   }
 
 

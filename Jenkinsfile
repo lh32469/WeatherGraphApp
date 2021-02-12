@@ -1,3 +1,12 @@
+def project = "weather"
+def port = "8085"
+def branch = BRANCH_NAME.toLowerCase()
+def svcId =  project + "-" + branch + "-" + BUILD_NUMBER
+
+// Previously running container(s)
+def running = ""
+
+
 pipeline {
 
   options {
@@ -5,13 +14,16 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '10'))
     // Don't build the same branch concurrently
     disableConcurrentBuilds()
+
+    // Cleanup orphaned branch Docker container
+    branchTearDownExecutor 'CleanupDocker'
   }
 
   agent any
 
   stages {
 
-    stage('Build Maven') {
+    stage('Compile') {
       agent {
         docker {
           reuseNode true
@@ -20,56 +32,86 @@ pipeline {
         }
       }
       steps {
-        sh 'mvn clean package'
+        sh 'mvn -B -DskipTests clean compile'
+      }
+    }
+
+    stage('Test/Package') {
+      agent {
+        docker {
+          reuseNode true
+          image 'maven:latest'
+          args '--dns=172.17.0.1 -u root -v /var/lib/jenkins/.m2:/root/.m2'
+        }
+      }
+      steps {
+        sh 'mvn -B package'
+        junit '**/target/surefire-reports/TEST-*.xml'
       }
     }
 
     stage('Build New Docker') {
       environment {
-        registry = "weather/master"
         registryCredential = 'dockerhub'
       }
       steps {
         sh 'ls -l target'
         script {
-          image = docker.build registry + ":$BUILD_NUMBER"
+          // Get all matching containers currently running
+          running = sh(
+              returnStdout: true,
+              script: "docker ps -q --filter label=branch=$branch --filter label=app.name=$project"
+          )
+          image = docker.build("$project/$branch:$BUILD_NUMBER \
+              --label app.name=$project \
+              --label branch=$branch")
         }
         // Cleanup previous images older than 12 hours
-        sh 'docker image prune -af --filter "label=app.name=weather" --filter "until=12h"'
-      }
-    }
-
-    stage('Stop Existing Docker') {
-      steps {
-        sh 'docker stop weather-master || true && docker rm weather-master || true'
+        sh "docker image prune -af \
+              --filter label=app.name=$project \
+              --filter label=branch=$branch \
+              --filter until=12h"
       }
     }
 
     stage('Start New Docker') {
       steps {
-        sh 'docker run -d -p 4802:8080 ' +
+        sh 'docker run -d ' +
             '--restart=always ' +
             '--dns=172.17.0.1 ' +
-            '--name weather-master ' +
+            "--name $svcId " +
             '-e TZ=America/Los_Angeles ' +
-            'weather/master:$BUILD_NUMBER'
+            "-e SERVER_SERVLET_CONTEXT_PATH=/$project-$branch/ " +
+            "-e BRANCH=$branch " +
+            "$project/$branch:$BUILD_NUMBER"
       }
     }
 
-    stage('Register Consul Service') {
+    stage('Test/Register New Docker') {
       steps {
+        sh "sleep 30"
         script {
-          consul = "http://127.0.0.1:8500/v1/agent/service/register"
+          // Get Docker instance IP address.
           ip = sh(
               returnStdout: true,
-              script: "docker inspect weather-master | jq '.[].NetworkSettings.Networks.bridge.IPAddress'"
+              script: "docker inspect $project-$branch-$BUILD_NUMBER | jq '.[].NetworkSettings.Networks.bridge.IPAddress'"
           )
-          def service = readJSON text: '{ "Port": 4802 }'
-          service["Address"] = ip.toString().trim() replaceAll("\"", "");
-          service["Name"] = "weather-master".toString()
-          writeJSON file: 'service.json', json: service, pretty: 3
-          sh(script: "cat service.json")
-          sh(script: "curl -X PUT -d @service.json " + consul)
+          // Test new Docker instance directly
+          url = ip.trim() + ":$port"
+          sh "curl -f ${url}/$project-$branch/actuator/health > /dev/null"
+        }
+      }
+    }
+
+    stage('Stop Previous Docker') {
+      steps {
+        script {
+          running = running.trim()
+          running = running.replace("\n", " ").replace("\r", " ")
+          if(!running.isEmpty()) {
+            sh "docker stop $running"
+            sh "docker rm $running"
+          }
         }
       }
     }
@@ -82,6 +124,5 @@ pipeline {
       cleanWs()
     }
   }
-
 
 }
