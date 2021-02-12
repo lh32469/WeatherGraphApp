@@ -18,13 +18,13 @@ import org.springframework.web.context.annotation.RequestScope;
 import javax.annotation.PostConstruct;
 import javax.inject.Named;
 import java.io.IOException;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 /**
@@ -34,62 +34,24 @@ import java.util.Optional;
 @RequestScope
 public class StationBean {
 
+  /**
+   * The Chart/Graph object used by JSF/Primefaces.
+   */
+  LineChartModel tempGraph;
+
+
   public static final DateTimeFormatter DTF
       = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
 
+  /**
+   * Readings every five minutes.
+   */
   static final String fiveMinute =
       "https://api.mesowest.net/v2/stations/timeseries?stid=KPDX&recent=4320&obtimezone=local&complete=1&hfmetars=1&token=d8c6aee36a994f90857925cea26934be";
 
 
-  LineChartModel tempGraph;
+  final static private Logger LOG = LoggerFactory.getLogger(StationBean.class);
 
-  /**
-   * Number of hours to look back for comparison.
-   */
-  private static final int NUM_HOURS_AGO = 24;
-
-  private static final ZoneOffset zone = ZoneOffset.ofHours(-7);
-
-  final static private Logger LOG
-      = LoggerFactory.getLogger(StationBean.class);
-
-
-  /**
-   * Gets the temperature 24 hours prior to the ZonedDateTime provided.
-   * Returns Optional.empty() if no temperature is found.
-   */
-  Optional<Double> getTime24HoursAgo(ZonedDateTime now,
-                                     Map<ZonedDateTime, Double> timesToTemps) {
-
-    LOG.debug("now = " + now);
-    Optional<ZonedDateTime> prevTemp = Optional.empty();
-
-    for (int i = 0; i < 15; i++) {
-
-      ZonedDateTime prevWindowOpen = now.minusHours(24).minusMinutes(i);
-      ZonedDateTime prevWindowClose = now.minusHours(24).plusMinutes(i);
-      LOG.debug("Between " + prevWindowOpen + " and " + prevWindowClose);
-
-      prevTemp = timesToTemps.keySet().stream()
-          .filter(t -> t.isAfter(prevWindowOpen))
-          .filter(t -> t.isBefore(prevWindowClose))
-          .findFirst();
-
-      if (prevTemp.isPresent()) {
-        break;
-      }
-    }
-
-    if (prevTemp.isPresent()) {
-      double degF = timesToTemps.get(prevTemp.get()) * 9 / 5 + 32;
-      LOG.debug("prevTemp = " + prevTemp.get() + ", "
-          + degF + " Deg F");
-      return Optional.of(degF);
-    } else {
-      return Optional.empty();
-    }
-
-  }
 
   @PostConstruct
   public void postConstruct() throws IOException {
@@ -143,6 +105,63 @@ public class StationBean {
     tempGraph.addSeries(yesterday);
   }
 
+
+  /**
+   * Gets the temperature 24 hours prior to the ZonedDateTime provided.
+   * Returns Optional.empty() if no temperature is found.
+   */
+  Optional<Double> getTime24HoursAgo(ZonedDateTime now,
+                                     Map<ZonedDateTime, Double> timesToTemps) {
+
+    LOG.debug("now = " + now);
+    Optional<ZonedDateTime> prevTemp = Optional.empty();
+
+    LOG.debug("timesToTemps.keySet().size() = " + timesToTemps.keySet().size());
+
+    // Narrow search area for subsequent search iterations
+    List<ZonedDateTime> searchArea = timesToTemps.keySet().stream()
+        .filter(t -> t.isAfter(now.minusHours(28)))
+        .filter(t -> t.isBefore(now.minusHours(20)))
+        .collect(Collectors.toList());
+
+    LOG.debug("searchArea.size() = " + searchArea.size());
+
+    // Expanding window to catch the closest one first.
+    for (int i = 1; i < 15; i++) {
+
+      ZonedDateTime prevWindowOpen = now.minusHours(24).minusMinutes(i);
+      ZonedDateTime prevWindowClose = now.minusHours(24).plusMinutes(i);
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("Between " + prevWindowOpen + " and " + prevWindowClose);
+      }
+
+      prevTemp = searchArea.stream()
+          .filter(t -> t.isAfter(prevWindowOpen))
+          .filter(t -> t.isBefore(prevWindowClose))
+          .findFirst();
+
+      if (prevTemp.isPresent()) {
+        break;
+      }
+    }
+
+    if (prevTemp.isPresent()) {
+      double degF = timesToTemps.get(prevTemp.get()) * 9 / 5 + 32;
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("prevTemp = " + prevTemp.get() + ", " + degF + " Deg F");
+      }
+      return Optional.of(degF);
+    } else {
+      return Optional.empty();
+    }
+
+  }
+
+
+  /**
+   * Process the Observations Map provided and return a Map of temperature
+   * reading time to temperature reading in degrees fahrenheit.
+   */
   Map<ZonedDateTime, Double> getTimesToTemps(Map<String, Object> observations) {
 
     Map<ZonedDateTime, Double> timesToTemps = new HashMap<>();
@@ -160,6 +179,9 @@ public class StationBean {
   }
 
 
+  /**
+   * JSF Method to get resulting Chart/Graph.
+   */
   public LineChartModel getTempGraph() {
     return tempGraph;
   }
