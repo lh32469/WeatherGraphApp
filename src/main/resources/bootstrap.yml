@@ -1,6 +1,6 @@
 spring:
   application:
-    name: weather-${BRANCH:dev}
+    name: weathergraphapp-${BRANCH:dev}
   cloud:
     consul:
       host: dell-4290.local
