@@ -1,4 +1,6 @@
-def project = "weather"
+// project should be the last token of the Git repo URL in lowercase
+// so that Jenkins branchTearDownExecutor job 'CleanupDocker' will work
+def project = "weathergraphapp"
 def port = "8085"
 def branch = BRANCH_NAME.toLowerCase()
 def svcId =  project + "-" + branch + "-" + BUILD_NUMBER
