@@ -19,7 +19,7 @@ spring:
         auto-deregistration: true
         instance:
           prefer-ip: true
-          service-base-url: http://consul.gpc4j.org
+          service-base-url: http://weather.gpc4j.org
   jackson:
     serialization:
       INDENT_OUTPUT: true
