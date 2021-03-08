@@ -89,8 +89,11 @@ public class StationBean {
 
     for (int i = 0; i < times.size(); i++) {
       ZonedDateTime time = ZonedDateTime.parse(times.get(i), DTF);
-      double degF = timesToTemps.get(time) * 9 / 5 + 32;
-      now.set(i, degF);
+      Double temp = timesToTemps.get(time);
+
+      if (null != temp) {
+        now.set(i, temp * 9 / 5 + 32);
+      }
 
       Optional<Double> prev = getTime24HoursAgo(time, timesToTemps);
       if (prev.isPresent()) {
