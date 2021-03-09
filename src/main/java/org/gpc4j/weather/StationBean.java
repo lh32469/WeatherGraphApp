@@ -175,7 +175,9 @@ public class StationBean {
     for (int i = 0; i < times.size(); i++) {
       String time = times.get(i);
       ZonedDateTime key = ZonedDateTime.parse(time, DTF);
-      timesToTemps.put(key, airTemp.get(i));
+      if (null != airTemp.get(i)) {
+        timesToTemps.put(key, airTemp.get(i));
+      }
     }
 
     return timesToTemps;
