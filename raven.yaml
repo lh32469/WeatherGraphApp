@@ -14,22 +14,47 @@ spec:
         app: raven-db # has to match .spec.selector.matchLabels
     spec:
       terminationGracePeriodSeconds: 10
+      dnsConfig:
+        searches:
+        - raven-db.default.svc.cluster.local
       containers:
       - image: ravendb/ravendb:latest
         name: ravendb
         env:
+        - name: MY_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_APP
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['app']
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: MY_POD_SERVICE_ACCOUNT
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.serviceAccountName
         - name: RAVEN_License_Eula_Accepted
           value: "true"
         - name: RAVEN_ARGS
           value: "--Setup.Mode=None"
         - name: RAVEN_Security_UnsecuredAccessAllowed
           value: "PrivateNetwork"
-        - name: MY_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        - name: PublicServerUrl
-          value: "http://${MY_POD_IP}:8080/"
+#        - name: PublicServerUrl
+#          value: "http://$(MY_POD_IP):8080/"
+#        - name: Hostname
+#          value: "$(MY_POD_NAME).$(MY_POD_APP).default.svc.cluster.local"
         resources:
           limits:
             cpu: "1"
