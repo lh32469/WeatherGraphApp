@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: node
+spec:
+  selector:
+    matchLabels:
+      app: raven-db # has to match .spec.template.metadata.labels
+  serviceName: "raven-db"
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: raven-db # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - image: ravendb/ravendb:latest
+        name: ravendb
+        env:
+        - name: RAVEN_License_Eula_Accepted
+          value: "true"
+        - name: RAVEN_ARGS
+          value: "--Setup.Mode=None"
+        - name: RAVEN_Security_UnsecuredAccessAllowed
+          value: "PrivateNetwork"
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: PublicServerUrl
+          value: "http://${MY_POD_IP}:8080/"
+        resources:
+          limits:
+            cpu: "1"
+          requests:
+            cpu: ".5"
+        volumeMounts:
+        - name: www
+          mountPath: /usr/share/nginx/html
+  volumeClaimTemplates:
+  - metadata:
+      name: www
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: raven-db
+  labels:
+    app: raven-db
+spec:
+  clusterIP: None
+  selector:
+    app: raven-db
+  ports:
+    - port: 8080 # Default port for image
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: raven-db-ingress
+  annotations:
+#    nginx.ingress.kubernetes.io/app-root: /
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: raven.local
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: raven-db
+            port:
+              number: 8080
+
