@@ -60,7 +60,7 @@ jobs:
       - name: Deploy new image to Kubernetes
         env:
           KUBECONFIG: ./k_config
-        run: kubectl apply weather.yaml --insecure-skip-tls-verify
+        run: kubectl apply -f weather.yaml --insecure-skip-tls-verify
 
   env:
     runs-on: ubuntu-latest
