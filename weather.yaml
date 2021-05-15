@@ -34,7 +34,7 @@ spec:
               cpu: ".25"
           livenessProbe:
             httpGet:
-              path: /
+              path: /ping
               port: 8085
               httpHeaders:
                 - name: Custom-Header
