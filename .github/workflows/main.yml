@@ -66,12 +66,6 @@ jobs:
         if: kubectl get image deployment/weather
         run: echo Deploytment exists
 
-      - name: Create new Kubernetes Deployment2
-        env:
-          KUBECONFIG: ./k_config
-        if: ! kubectl get image deployment/weather
-        run: echo Deploytment doesn't exist
-
       - name: Deploy new image to Kubernetes
         env:
           KUBECONFIG: ./k_config
