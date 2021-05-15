@@ -25,6 +25,20 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      - name: Replace Environment Variables
+        uses: danielr1996/envsubst-action@1.0.0
+        env:
+          KUBE_SERVER: ${{ secrets.KUBE_SERVER }}
+          KUBE_TOKEN: ${{ secrets.KUBE_TOKEN }}
+        with:
+          input: kube_config
+          output: k_config 
+
+      - name: Set Kubernetes Cluster 
+        env:
+          KUBECONFIG=./k_config
+        run: kubectl get pods -A
+
       - name: Maven Compile
         run: mvn -B compile
 
@@ -43,17 +57,6 @@ jobs:
       - name: Push image to Docker Hub
         run: docker push lh32469/weather
 
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-
       - name: Set Kubernetes Cluster 
-        run: kubectl --server  http://weather.gpc4j.org:7979 get pods -A
+        run: kubectl get pods -A
 
