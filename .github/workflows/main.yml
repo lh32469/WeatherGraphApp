@@ -64,7 +64,7 @@ jobs:
         env:
           IMAGE: weather-$GITHUB_REF##*/:$GITHUB_RUN_NUMBER
           KUBECONFIG: ./k_config
-        run: kubectl set image deployment/weather weather=$IMAGE
+        run: kubectl set image deployment/weather weather=lh32469/weather-${GITHUB_REF##*/}:${GITHUB_RUN_NUMBER}
 
   env:
     runs-on: ubuntu-latest
