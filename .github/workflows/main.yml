@@ -62,7 +62,7 @@ jobs:
 
       - name: Deploy new image to Kubernetes
         env:
-          IMAGE: weather-${GITHUB_REF##*/}:${GITHUB_RUN_NUMBER}
+          IMAGE: weather-$GITHUB_REF##*/:$GITHUB_RUN_NUMBER
           KUBECONFIG: ./k_config
         run: kubectl set image deployment/weather weather=$IMAGE
 
