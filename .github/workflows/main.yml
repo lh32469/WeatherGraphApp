@@ -49,7 +49,7 @@ jobs:
         env:
           BRANCH: ${GITHUB_REF##*/}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        run: docker build -t lh32469/weather .
+        run: docker build -t lh32469/weather-${GITHUB_REF##*/}:${GITHUB_RUN_NUMBER} .
 
       - name: Docker Login
         env:
@@ -58,7 +58,7 @@ jobs:
         run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 
       - name: Push image to Docker Hub
-        run: docker push lh32469/weather
+        run: docker push lh32469/weather-${GITHUB_REF##*/}:${GITHUB_RUN_NUMBER} .
 
       - name: Deploy new image to Kubernetes
         env:
