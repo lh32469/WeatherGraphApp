@@ -2,7 +2,7 @@
 
 name: CI
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
@@ -31,10 +31,10 @@ jobs:
           sed -e 's/KUBE_TOKEN/${{ secrets.KUBE_TOKEN }}/g' config.1 > k_config
           cat k_config
 
-      - name: Display Config 
+      - name: Display Config
         run: cat k_config
 
-      - name: Set Kubernetes Cluster 
+      - name: Set Kubernetes Cluster
         env:
           KUBECONFIG: ./k_config
         run: kubectl get pods -A
@@ -60,9 +60,20 @@ jobs:
       - name: Push image to Docker Hub
         run: docker push lh32469/weather-${GITHUB_REF##*/}:${GITHUB_RUN_NUMBER}
 
+      - name: Create new Kubernetes Deployment
+        env:
+          KUBECONFIG: ./k_config
+        if: kubectl get image deployment/weather
+        run: echo Deploytment exists
+
+      - name: Create new Kubernetes Deployment2
+        env:
+          KUBECONFIG: ./k_config
+        if: ! kubectl get image deployment/weather
+        run: echo Deploytment doesn't exist
+
       - name: Deploy new image to Kubernetes
         env:
-          IMAGE: weather-$GITHUB_REF##*/:$GITHUB_RUN_NUMBER
           KUBECONFIG: ./k_config
         run: kubectl set image deployment/weather weather=lh32469/weather-${GITHUB_REF##*/}:${GITHUB_RUN_NUMBER}
 
@@ -74,11 +85,11 @@ jobs:
 
       - name: Print Environment Variables
         run: env
-      - name: List Directory 
+      - name: List Directory
         env:
           BRANCH: ${GITHUB_REF##*/}
         run: ls -l
-      - name: Print Branch Name 
+      - name: Print Branch Name
         env:
           BRANCH: ${GITHUB_REF##*/}
         run: echo BRANCH=${BRANCH}
