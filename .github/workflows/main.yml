@@ -25,14 +25,11 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Replace Environment Variables
-        uses: danielr1996/envsubst-action@1.0.0
-        env:
-          KUBE_SERVER: ${{ secrets.KUBE_SERVER }}
-          KUBE_TOKEN: ${{ secrets.KUBE_TOKEN }}
-        with:
-          input: kube_config
-          output: k_config 
+      - name: Substitute Secrets
+        run: |
+          echo sed -e 's/KUBE_SERVER/${{ secrets.KUBE_SERVER }}/g' kube_config > config.1
+          echo sed -e 's/KUBE_TOKEN/${{ secrets.KUBE_TOKEN }}/g' config.1 > k_config
+          echo cat k_config
 
       - name: Display Config 
         run: cat k_config
