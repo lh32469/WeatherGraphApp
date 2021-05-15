@@ -58,7 +58,7 @@ jobs:
         run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 
       - name: Push image to Docker Hub
-        run: docker push lh32469/weather-${GITHUB_REF##*/}:${GITHUB_RUN_NUMBER} .
+        run: docker push lh32469/weather-${GITHUB_REF##*/}:${GITHUB_RUN_NUMBER}
 
       - name: Deploy new image to Kubernetes
         env:
