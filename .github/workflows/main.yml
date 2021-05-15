@@ -60,10 +60,17 @@ jobs:
       - name: Push image to Docker Hub
         run: docker push lh32469/weather-${GITHUB_REF##*/}:${GITHUB_RUN_NUMBER}
 
-      - name: Create new Kubernetes Deployment
+      - name: Check existing Kubernetes Deployment
+        id: deployment_check
         env:
           KUBECONFIG: ./k_config
-        if: kubectl get image deployment/weather
+        run: kubectl get image deployment/weather
+        continue-on-error: true
+
+      - name: Create new Kubernetes Deployment
+        if: job.steps.deployment_check.status == failure()
+        env:
+          KUBECONFIG: ./k_config
         run: echo Deploytment exists
 
       - name: Deploy new image to Kubernetes
