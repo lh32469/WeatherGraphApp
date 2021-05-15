@@ -37,7 +37,7 @@ jobs:
       - name: Set Kubernetes Cluster 
         env:
           KUBECONFIG: ./k_config
-        run: kubectl get pods -A --insecure-skip-tls-verify
+        run: kubectl get pods -A
 
       - name: Maven Compile
         run: mvn -B compile
@@ -63,7 +63,7 @@ jobs:
       - name: Deploy new image to Kubernetes
         env:
           KUBECONFIG: ./k_config
-        run: kubectl apply -f weather.yaml --insecure-skip-tls-verify
+        run: kubectl apply -f weather.yaml
 
   env:
     runs-on: ubuntu-latest
