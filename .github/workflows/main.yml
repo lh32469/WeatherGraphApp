@@ -36,7 +36,7 @@ jobs:
 
       - name: Set Kubernetes Cluster 
         env:
-          KUBECONFIG=./k_config
+          KUBECONFIG: ./k_config
         run: kubectl get pods -A
 
       - name: Maven Compile
