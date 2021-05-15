@@ -34,10 +34,13 @@ jobs:
           input: kube_config
           output: k_config 
 
+      - name: Display Config 
+        run: cat k_config
+
       - name: Set Kubernetes Cluster 
         env:
           KUBECONFIG: ./k_config
-        run: kubectl get pods -A
+        run: kubectl get pods -A --insecure-skip-tls-verify
 
       - name: Maven Compile
         run: mvn -B compile
