@@ -64,7 +64,7 @@ jobs:
         id: deployment_check
         env:
           KUBECONFIG: ./k_config
-        run: kubectl get image deployment/weather
+        run: kubectl get deployment/weather
         continue-on-error: true
 
       - name: Create new Kubernetes Deployment
