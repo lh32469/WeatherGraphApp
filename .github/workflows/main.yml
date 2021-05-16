@@ -68,7 +68,7 @@ jobs:
         continue-on-error: true
 
       - name: Create new Kubernetes Deployment
-        if: job.steps.deployment_check.status == success()
+        if: steps.deployment_check.outcome != 'success'
         env:
           KUBECONFIG: ./k_config
         run: echo Deploytment does not exist
