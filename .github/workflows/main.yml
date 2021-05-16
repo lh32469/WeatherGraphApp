@@ -34,10 +34,12 @@ jobs:
       - name: Display Config
         run: cat k_config
 
-      - name: Set Kubernetes Cluster
-        env:
-          KUBECONFIG: ./k_config
-        run: kubectl get pods -A
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
 
       - name: Maven Compile
         run: mvn -B compile
