@@ -71,7 +71,7 @@ jobs:
         if: job.steps.deployment_check.status == failure()
         env:
           KUBECONFIG: ./k_config
-        run: echo Deploytment doesn't exist
+        run: echo Deploytment does not exist
 
       - name: Deploy new image to Kubernetes
         env:
