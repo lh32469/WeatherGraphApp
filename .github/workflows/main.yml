@@ -20,6 +20,9 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
+    env:
+      APP_NAME: weather
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -41,8 +44,8 @@ jobs:
 #          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
 #          restore-keys: ${{ runner.os }}-m2
 
-      - name: Maven Compile
-        run: mvn -B compile
+#      - name: Maven Compile
+#        run: mvn -B compile
 
       - name: Maven Package
         run: mvn -B package
@@ -66,19 +69,19 @@ jobs:
         id: deployment_check
         env:
           KUBECONFIG: ./k_config
-        run: kubectl get deployment/weather
+        run: kubectl get deployment/${GITHUB_REF##*/} -n ${APP_NAME}-${GITHUB_REF##*/}
         continue-on-error: true
 
       - name: Create new Kubernetes Deployment
         if: steps.deployment_check.outcome != 'success'
         env:
           KUBECONFIG: ./k_config
-        run: echo Deploytment does not exist
+        run: kubectl apply -f weather.yaml -n -n ${APP_NAME}-${GITHUB_REF##*/}
 
       - name: Deploy new image to Kubernetes
         env:
           KUBECONFIG: ./k_config
-        run: kubectl set image deployment/weather weather=lh32469/weather-${GITHUB_REF##*/}:${GITHUB_RUN_NUMBER}
+        run: kubectl set image deployment/${GITHUB_REF##*/} ${APP_NAME}=lh32469/${APP_NAME}-${GITHUB_REF##*/}:${GITHUB_RUN_NUMBER}
 
   env:
     runs-on: ubuntu-latest
