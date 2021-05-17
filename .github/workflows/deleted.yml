@@ -27,7 +27,7 @@ jobs:
       - name: Delete Namspace
         env:
           KUBECONFIG: ./k_config
-        run: kubectl delete namespace ${APP_NAME}-${GITHUB_REF##*/}
+        run: kubectl delete namespace ${APP_NAME}-${{ github.event.ref }}
 
   env:
     runs-on: ubuntu-latest
