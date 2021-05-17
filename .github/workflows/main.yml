@@ -76,7 +76,9 @@ jobs:
         if: steps.deployment_check.outcome != 'success'
         env:
           KUBECONFIG: ./k_config
-        run: kubectl apply -f weather.yaml -n ${APP_NAME}-${GITHUB_REF##*/}
+        run: |
+          kubectl create namespace ${APP_NAME}-${GITHUB_REF##*/}
+          kubectl apply -f weather.yaml -n ${APP_NAME}-${GITHUB_REF##*/}
 
       - name: Deploy new image to Kubernetes
         env:
