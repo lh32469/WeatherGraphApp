@@ -64,7 +64,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-    - host: weather.k8s.gpc4j.org
+    - host: HOSTNAME.k8s.gpc4j.org
       http:
         paths:
           - pathType: Prefix
