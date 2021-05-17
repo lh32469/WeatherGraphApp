@@ -83,9 +83,10 @@ jobs:
       - name: Deploy new image to Kubernetes
         env:
           KUBECONFIG: ./k_config
+          # set image -n weather-pipeline deployment/weather weather=lh32469/weather-pipeline:42
         run: kubectl set image \
           -n ${APP_NAME}-${GITHUB_REF##*/} \
-          deployment/${GITHUB_REF##*/} \
+          deployment/${APP_NAME} \
           ${APP_NAME}=lh32469/${APP_NAME}-${GITHUB_REF##*/}:${GITHUB_RUN_NUMBER} \
 
 
