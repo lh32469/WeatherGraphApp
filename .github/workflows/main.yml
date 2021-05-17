@@ -69,7 +69,8 @@ jobs:
         id: deployment_check
         env:
           KUBECONFIG: ./k_config
-        run: kubectl get deployment/${GITHUB_REF##*/} -n ${APP_NAME}-${GITHUB_REF##*/}
+          # get -n weather-pipeline deployment/weather
+        run: kubectl get -n ${APP_NAME}-${GITHUB_REF##*/} deployment/${APP_NAME}
         continue-on-error: true
 
       - name: Create new Kubernetes Deployment
