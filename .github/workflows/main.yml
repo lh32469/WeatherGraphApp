@@ -83,8 +83,9 @@ jobs:
       - name: Deploy new image to Kubernetes
         env:
           KUBECONFIG: ./k_config
-        run: kubectl  -n ${APP_NAME}-${GITHUB_REF##*/} \
-          set image deployment/${GITHUB_REF##*/} \
+        run: kubectl set image \
+          -n ${APP_NAME}-${GITHUB_REF##*/} \
+          deployment/${GITHUB_REF##*/} \
           ${APP_NAME}=lh32469/${APP_NAME}-${GITHUB_REF##*/}:${GITHUB_RUN_NUMBER} \
 
 
