@@ -34,7 +34,7 @@ jobs:
           sed -e 's/KUBE_TOKEN/${{ secrets.KUBE_TOKEN }}/g' config.1 > k_config
           cat k_config
           # Set hostname to App.Branch...
-          sed -e 's/HOSTNAME/${APP_NAME}.${GITHUB_REF##*/}/g' weather-template.yaml > weather.yaml
+          sed -e 's/HOSTNAME/${APP_NAME}\.${GITHUB_REF##*/}/g' weather-template.yaml > weather.yaml
 
       - name: Display Config
         run: cat k_config
