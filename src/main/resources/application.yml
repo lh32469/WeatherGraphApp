@@ -15,11 +15,10 @@ spring:
   boot:
     admin:
       client:
-        url: http://dell-4290.local:8099
+        url: http://svc.sba-k8s:8099
         auto-deregistration: true
         instance:
           prefer-ip: true
-          service-base-url: http://weather.gpc4j.org:2583
   jackson:
     serialization:
       INDENT_OUTPUT: true
