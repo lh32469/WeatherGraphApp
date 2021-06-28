@@ -16,7 +16,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.annotation.RequestScope;
 
 import javax.annotation.PostConstruct;
+import javax.faces.context.FacesContext;
 import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -56,6 +58,10 @@ public class StationBean {
   @PostConstruct
   public void postConstruct() throws IOException {
     LOG.info("Start...");
+
+    HttpServletRequest request = (HttpServletRequest)
+        FacesContext.getCurrentInstance().getExternalContext().getRequest();
+    LOG.info("request.getServerName() = " + request.getServerName());
 
     RestTemplate restTemplate = new RestTemplate();
     ResponseEntity<String> response =
