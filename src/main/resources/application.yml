@@ -29,6 +29,10 @@ joinfaces:
     state-saving-method: client
 
 logging:
+  level:
+    root: INFO
+    org.apache.http: INFO
+    net.ravendb.client: WARN
   pattern:
     dateformat: MM-dd HH:mm:ss.SSS,America/Los_Angeles
 

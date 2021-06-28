@@ -46,22 +46,33 @@ public class StationBean {
       = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
 
   /**
-   * Readings every five minutes.
+   * Template for readings from STATION every five minutes.
    */
-  static final String fiveMinute =
-      "https://api.mesowest.net/v2/stations/timeseries?stid=KPDX&recent=4320&obtimezone=local&complete=1&hfmetars=1&token=d8c6aee36a994f90857925cea26934be";
-
+  static final String FIVE_MINUTE_TEMPLATE =
+      "https://api.mesowest.net/v2/stations/timeseries?stid=STATION&recent=4320&obtimezone=local&complete=1&hfmetars=1&token=d8c6aee36a994f90857925cea26934be";
 
   final static private Logger LOG = LoggerFactory.getLogger(StationBean.class);
 
 
   @PostConstruct
   public void postConstruct() throws IOException {
-    LOG.info("Start...");
+
+    // Default station
+    String station = "KPDX";
 
     HttpServletRequest request = (HttpServletRequest)
         FacesContext.getCurrentInstance().getExternalContext().getRequest();
-    LOG.info("request.getServerName() = " + request.getServerName());
+
+    final String serverName = request.getServerName();
+
+    LOG.debug("request.getServerName() = " + serverName);
+    if (serverName.endsWith(".weather.gpc4j.org")) {
+      String[] array = serverName.split("\\.");
+      station = array[0].toUpperCase();
+    }
+
+    LOG.info("station = " + station);
+    String fiveMinute = FIVE_MINUTE_TEMPLATE.replace("STATION", station);
 
     RestTemplate restTemplate = new RestTemplate();
     ResponseEntity<String> response =
