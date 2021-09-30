@@ -75,3 +75,24 @@ spec:
                 port:
                   number: 8085
 
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: weather-wildcard
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: '*.weather.gpc4j.org'
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: weather-service
+                port:
+                  number: 8085
