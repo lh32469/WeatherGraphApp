@@ -3,6 +3,8 @@ FROM openjdk:11
 COPY target/WeatherGraphApp-*.jar /usr/src/weather.jar
 WORKDIR                  /usr/src/
 
+ENV _JAVA_OPTIONS="-Xmx256m"
+
 CMD ["java", "-jar", "weather.jar" ]
 
 HEALTHCHECK --interval=15s --timeout=3s \
