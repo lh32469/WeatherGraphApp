@@ -30,8 +30,10 @@ spec:
           resources:
             limits:
               cpu: "1.25"
+              memory: "750Mi"
             requests:
               cpu: ".25"
+              memory: "500Mi"
           livenessProbe:
             httpGet:
               path: /ping
@@ -40,7 +42,7 @@ spec:
                 - name: Custom-Header
                   value: Awesome
             initialDelaySeconds: 15
-            periodSeconds: 5
+            periodSeconds: 10
 
 ---
 
