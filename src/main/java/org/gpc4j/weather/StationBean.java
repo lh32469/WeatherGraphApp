@@ -115,10 +115,10 @@ public class StationBean {
       }
     }
 
-    yAxis.setMax(70);
-    yAxis.setMin(45);
-    LOG.info("yAxis.getMax() = {}", yAxis.getMax());
-    LOG.info("yAxis.getMax() = {}", yAxis.getMin());
+//    yAxis.setMax(70);
+//    yAxis.setMin(45);
+//    LOG.info("yAxis.getMax() = {}", yAxis.getMax());
+//    LOG.info("yAxis.getMax() = {}", yAxis.getMin());
 
     xAxis.setMax((now.getData().size()) + 20);
     //xAxis.setMax(650);
