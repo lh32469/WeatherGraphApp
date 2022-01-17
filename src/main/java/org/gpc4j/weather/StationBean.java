@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-
 /**
  * @author Lyle T Harris
  */
@@ -41,7 +40,6 @@ public class StationBean {
    */
   LineChartModel tempGraph;
 
-
   public static final DateTimeFormatter DTF
       = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
 
@@ -52,7 +50,6 @@ public class StationBean {
       "https://api.mesowest.net/v2/stations/timeseries?stid=STATION&recent=4320&obtimezone=local&complete=1&hfmetars=1&token=d8c6aee36a994f90857925cea26934be";
 
   final static private Logger LOG = LoggerFactory.getLogger(StationBean.class);
-
 
   @PostConstruct
   public void postConstruct() throws IOException {
@@ -66,7 +63,7 @@ public class StationBean {
     final String serverName = request.getServerName();
 
     LOG.debug("request.getServerName() = " + serverName);
-    if (serverName.endsWith(".weather.gpc4j.org")) {
+    if (serverName.endsWith(".weather.gpc4j.com")) {
       String[] array = serverName.split("\\.");
       station = array[0].toUpperCase();
     }
@@ -118,13 +115,17 @@ public class StationBean {
       }
     }
 
+    yAxis.setMax(70);
+    yAxis.setMin(45);
+    LOG.info("yAxis.getMax() = {}", yAxis.getMax());
+    LOG.info("yAxis.getMax() = {}", yAxis.getMin());
+
     xAxis.setMax((now.getData().size()) + 20);
     //xAxis.setMax(650);
 
     tempGraph.addSeries(now);
     tempGraph.addSeries(yesterday);
   }
-
 
   /**
    * Gets the temperature 24 hours prior to the ZonedDateTime provided.
@@ -177,7 +178,6 @@ public class StationBean {
 
   }
 
-
   /**
    * Process the Observations Map provided and return a Map of temperature
    * reading time to temperature reading in degrees fahrenheit.
@@ -200,13 +200,11 @@ public class StationBean {
     return timesToTemps;
   }
 
-
   /**
    * JSF Method to get resulting Chart/Graph.
    */
   public LineChartModel getTempGraph() {
     return tempGraph;
   }
-
 
 }

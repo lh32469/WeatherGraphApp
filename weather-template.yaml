@@ -66,7 +66,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-    - host: HOSTNAME.gpc4j.org
+    - host: HOSTNAME.gpc4j.com
       http:
         paths:
           - pathType: Prefix
@@ -87,7 +87,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-    - host: '*.weather.gpc4j.org'
+    - host: '*.weather.gpc4j.com'
       http:
         paths:
           - pathType: Prefix
