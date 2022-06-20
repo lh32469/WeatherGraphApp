@@ -1,5 +1,8 @@
 FROM openjdk:11
 
+RUN rm /etc/localtime
+RUN ln -s /usr/share/zoneinfo/PST8PDT /etc/localtime
+
 COPY target/WeatherGraphApp-*.jar /usr/src/weather.jar
 WORKDIR                  /usr/src/
 
