@@ -95,25 +95,31 @@ public class StationBean {
 
     LineChartSeries now = new LineChartSeries();
     now.setShowMarker(false);
-    now.setLabel("Now");
 
     LineChartSeries yesterday = new LineChartSeries();
     yesterday.setShowMarker(false);
-    yesterday.setLabel("Prev");
+
+    double latestTemp = 0.0;
+    double yesterdayAtThisTime = 0.0;
 
     for (int i = 0; i < times.size(); i++) {
       ZonedDateTime time = ZonedDateTime.parse(times.get(i), DTF);
       Double temp = timesToTemps.get(time);
 
       if (null != temp) {
-        now.set(i, temp * 9 / 5 + 32);
+        latestTemp = temp * 9 / 5 + 32;
+        now.set(i, latestTemp);
       }
 
-      Optional<Double> prev = getTime24HoursAgo(time, timesToTemps);
+      Optional<Double> prev = getTemp24HoursAgo(time, timesToTemps);
       if (prev.isPresent()) {
-        yesterday.set(i, prev.get());
+        yesterdayAtThisTime = prev.get();
+        yesterday.set(i, yesterdayAtThisTime);
       }
     }
+
+    now.setLabel("Now (" + latestTemp + ")");
+    yesterday.setLabel("Prev (" + yesterdayAtThisTime + ")");
 
 //    yAxis.setMax(70);
 //    yAxis.setMin(45);
@@ -131,7 +137,7 @@ public class StationBean {
    * Gets the temperature 24 hours prior to the ZonedDateTime provided.
    * Returns Optional.empty() if no temperature is found.
    */
-  Optional<Double> getTime24HoursAgo(ZonedDateTime now,
+  Optional<Double> getTemp24HoursAgo(ZonedDateTime now,
                                      Map<ZonedDateTime, Double> timesToTemps) {
 
     LOG.debug("now = " + now);
@@ -141,8 +147,8 @@ public class StationBean {
 
     // Narrow search area for subsequent search iterations
     List<ZonedDateTime> searchArea = timesToTemps.keySet().stream()
-        .filter(t -> t.isAfter(now.minusHours(28)))
-        .filter(t -> t.isBefore(now.minusHours(20)))
+        .filter(t -> t.isAfter(now.minusHours(26)))
+        .filter(t -> t.isBefore(now.minusHours(22)))
         .collect(Collectors.toList());
 
     LOG.debug("searchArea.size() = " + searchArea.size());
