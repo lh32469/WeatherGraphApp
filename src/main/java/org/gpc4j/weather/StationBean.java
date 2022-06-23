@@ -118,8 +118,8 @@ public class StationBean {
       }
     }
 
-    now.setLabel("Now (" + latestTemp + ")");
-    yesterday.setLabel("Prev (" + yesterdayAtThisTime + ")");
+    now.setLabel("Now (" + String.format("%.1f", latestTemp) + ")");
+    yesterday.setLabel("Prev (" + String.format("%.1f", yesterdayAtThisTime) + ")");
 
 //    yAxis.setMax(70);
 //    yAxis.setMin(45);
