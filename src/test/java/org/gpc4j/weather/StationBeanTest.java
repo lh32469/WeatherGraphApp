@@ -4,6 +4,7 @@ package org.gpc4j.weather;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.gpc4j.weather.dto.TimeSeries;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,12 +14,14 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.gpc4j.weather.StationBean.DTF;
 
+@Slf4j
 public class StationBeanTest {
 
 
@@ -51,8 +54,19 @@ public class StationBeanTest {
     Map<ZonedDateTime, Double> timesToTemps
         = stationBean.getTimesToTemps(observations);
 
-    Optional<Double> temp = stationBean.getTime24HoursAgo(now, timesToTemps);
+    Optional<Double> temp = stationBean.getTemp24HoursAgo(now, timesToTemps);
+    log.info("temp = {}", temp);
     Assertions.assertEquals(46.04, temp.get());
+  }
+
+  @Test
+  public void sdf() throws IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+
+    URL url = new URL("https://api.mesowest.net/v2/stations/timeseries?stid=e5093&recent=4320&obtimezone=local&complete=1&hfmetars=1&token=d8c6aee36a994f90857925cea26934be");
+
+    TimeSeries timeSeries = mapper.readValue(url, TimeSeries.class);
   }
 
 
