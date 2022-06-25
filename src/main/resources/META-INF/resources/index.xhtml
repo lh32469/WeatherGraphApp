@@ -8,9 +8,20 @@
 
 <h:head>
   <title>WeatherGraphApp</title>
-  <meta http-equiv="refresh" content="900"/>
   <meta name="description"
         content="Graph of latest temperatures"/>
+
+  <script type="text/javascript">
+
+      setInterval(update, 600000);
+
+      function update() {
+          if (!document.hidden) {
+              window.location.reload();
+          }
+      }
+
+  </script>
 </h:head>
 <h:body>
 
