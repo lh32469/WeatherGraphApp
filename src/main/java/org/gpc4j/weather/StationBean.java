@@ -107,7 +107,7 @@ public class StationBean {
       Double temp = timesToTemps.get(time);
 
       if (null != temp) {
-        latestTemp = temp * 9 / 5 + 32;
+        latestTemp = Math.round(10 * (temp * 9 / 5 + 32)) / 10.0;
         now.set(i, latestTemp);
       }
 
@@ -118,8 +118,8 @@ public class StationBean {
       }
     }
 
-    now.setLabel("Now (" + String.format("%.1f", latestTemp) + ")");
-    yesterday.setLabel("Prev (" + String.format("%.1f", yesterdayAtThisTime) + ")");
+    now.setLabel("Now (" + latestTemp + ")");
+    yesterday.setLabel("Prev (" + yesterdayAtThisTime + ")");
 
 //    yAxis.setMax(70);
 //    yAxis.setMin(45);
@@ -174,6 +174,7 @@ public class StationBean {
 
     if (prevTemp.isPresent()) {
       double degF = timesToTemps.get(prevTemp.get()) * 9 / 5 + 32;
+      degF = Math.round(10 * degF) / 10.0;
       if (LOG.isTraceEnabled()) {
         LOG.trace("prevTemp = " + prevTemp.get() + ", " + degF + " Deg F");
       }
