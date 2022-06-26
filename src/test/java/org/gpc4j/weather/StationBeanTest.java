@@ -56,7 +56,7 @@ public class StationBeanTest {
 
     Optional<Double> temp = stationBean.getTemp24HoursAgo(now, timesToTemps);
     log.info("temp = {}", temp);
-    Assertions.assertEquals(46.04, temp.get());
+    Assertions.assertEquals(46.0, temp.get());
   }
 
   @Test
