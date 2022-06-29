@@ -27,13 +27,6 @@ spec:
           env:
             - name: SERVER_SERVLET_CONTEXT_PATH
               value: "/"
-          resources:
-            limits:
-              cpu: "1.25"
-              memory: "756Mi"
-            requests:
-              cpu: ".25"
-              memory: "512Mi"
           livenessProbe:
             httpGet:
               path: /ping
