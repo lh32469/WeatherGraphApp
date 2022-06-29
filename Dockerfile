@@ -1,4 +1,4 @@
-FROM openjdk:11
+FROM amazoncorretto:11
 
 RUN rm /etc/localtime
 RUN ln -s /usr/share/zoneinfo/PST8PDT /etc/localtime
@@ -8,7 +8,12 @@ WORKDIR                  /usr/src/
 
 ENV TZ=America/Los_Angeles
 
-ENV _JAVA_OPTIONS="-Xmx256m"
+ENV _JAVA_OPTIONS="-XX:+UseShenandoahGC \
+-Xmx256m -Xms32m \
+-Dspring.profiles.active=${PROFILE} \
+-XX:+UnlockExperimentalVMOptions \
+-XX:ShenandoahUncommitDelay=1000 \
+-XX:ShenandoahGuaranteedGCInterval=10000"
 
 CMD ["java", "-jar", "weather.jar" ]
 
