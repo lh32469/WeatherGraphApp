@@ -12,6 +12,8 @@ server:
     redirect-context-root: false
 
 spring:
+  application:
+    name: WeatherGraph
   boot:
     admin:
       client:
