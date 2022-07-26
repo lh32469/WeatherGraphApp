@@ -16,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.annotation.RequestScope;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.faces.context.FacesContext;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
@@ -212,6 +213,13 @@ public class StationBean {
    */
   public LineChartModel getTempGraph() {
     return tempGraph;
+  }
+
+  @PreDestroy
+  public void preDestroy() {
+    LOG.debug("StationBean.preDestroy");
+    // Help garbage collection??
+    tempGraph = null;
   }
 
 }
