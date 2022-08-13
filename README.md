@@ -3,9 +3,9 @@ Reads National Weather Service temperature information and displays current and 
 
 Viewable at:
 
-   http://weather.gpc4j.com
+https://weather.lth.guru
 
-Or with weather station id in hostname:
+Or with weather station id in path:
 
-   http://e5093.weather.gpc4j.com
+https://weather.lth.guru/e5093
 
