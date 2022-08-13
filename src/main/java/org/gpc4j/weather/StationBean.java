@@ -61,12 +61,8 @@ public class StationBean {
     HttpServletRequest request = (HttpServletRequest)
         FacesContext.getCurrentInstance().getExternalContext().getRequest();
 
-    final String serverName = request.getServerName();
-
-    LOG.debug("request.getServerName() = " + serverName);
-    if (serverName.endsWith(".weather.gpc4j.com")) {
-      String[] array = serverName.split("\\.");
-      station = array[0].toUpperCase();
+    if (request.getAttribute("STATION") != null) {
+      station = request.getAttribute("STATION").toString();
     }
 
     LOG.info("station = " + station);

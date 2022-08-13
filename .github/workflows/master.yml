@@ -25,7 +25,7 @@ jobs:
           sed -e 's/KUBE_TOKEN/${{ secrets.KUBE_TOKEN }}/g' config.1 > k_config
           cat k_config
           # Set hostname to just Application name for master branch
-          sed -e "s/HOSTNAME/${APP_NAME}/g" weather-template.yaml > weather.yaml
+          sed -e "s/HOSTNAME/${APP_NAME}/g" k8s.yml > weather.yaml
 
       - name: Display Config
         run: cat k_config
