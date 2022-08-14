@@ -8,7 +8,7 @@ https://weather.lth.guru
 
 Or with weather station id in path:
 
-https://weather.lth.guru/e5093
+https://weather.lth.guru/station/e5093
 
 Where station id is taken from stations on this map:
 
