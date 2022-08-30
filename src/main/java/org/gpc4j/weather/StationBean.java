@@ -50,13 +50,16 @@ public class StationBean {
   static final String FIVE_MINUTE_TEMPLATE =
       "https://api.mesowest.net/v2/stations/timeseries?stid=STATION&recent=4320&obtimezone=local&complete=1&hfmetars=1&token=d8c6aee36a994f90857925cea26934be";
 
+
+  private String station;
+
   final static private Logger LOG = LoggerFactory.getLogger(StationBean.class);
 
   @PostConstruct
   public void postConstruct() throws IOException {
 
     // Default station
-    String station = "KPDX";
+    station = "KPDX";
 
     HttpServletRequest request = (HttpServletRequest)
         FacesContext.getCurrentInstance().getExternalContext().getRequest();
@@ -209,6 +212,10 @@ public class StationBean {
    */
   public LineChartModel getTempGraph() {
     return tempGraph;
+  }
+
+  public String getStation() {
+    return station;
   }
 
   @PreDestroy
