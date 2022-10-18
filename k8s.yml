@@ -51,10 +51,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - HOSTNAME.lth.guru
+        - HOSTNAME.gpc4j.org
       secretName: tls-secret
   rules:
-    - host: HOSTNAME.lth.guru
+    - host: HOSTNAME.gpc4j.org
       http:
         paths:
           - pathType: Prefix
