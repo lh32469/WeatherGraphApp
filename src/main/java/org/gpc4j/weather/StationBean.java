@@ -50,7 +50,6 @@ public class StationBean {
   static final String FIVE_MINUTE_TEMPLATE =
       "https://api.mesowest.net/v2/stations/timeseries?stid=STATION&recent=4320&obtimezone=local&complete=1&hfmetars=1&token=d8c6aee36a994f90857925cea26934be";
 
-
   private String station;
 
   final static private Logger LOG = LoggerFactory.getLogger(StationBean.class);
@@ -121,10 +120,28 @@ public class StationBean {
     now.setLabel("Now (" + latestTemp + ")");
     yesterday.setLabel("Prev (" + yesterdayAtThisTime + ")");
 
-//    yAxis.setMax(70);
-//    yAxis.setMin(45);
-//    LOG.info("yAxis.getMax() = {}", yAxis.getMax());
-//    LOG.info("yAxis.getMax() = {}", yAxis.getMin());
+    // Get Min Y value
+    int yMin = now.getData().values().stream()
+        .reduce((n1, n2) -> Math.min(n1.floatValue(), n2.floatValue()))
+        .map(Number::intValue)
+        .orElse(100);
+
+    // Get Max Y value
+    int yMax = now.getData().values().stream()
+        .reduce((n1, n2) -> Math.max(n1.floatValue(), n2.floatValue()))
+        .map(Number::intValue)
+        .orElse(0);
+
+    // Ensure spread is large enough so graph doesn't look too choppy.
+    while (yMax - yMin < 25) {
+      yMin--;
+      yMax++;
+    }
+
+    yAxis.setMax(yMax);
+    yAxis.setMin(yMin);
+    LOG.info("yAxis.getMax() = {}", yAxis.getMax());
+    LOG.info("yAxis.getMax() = {}", yAxis.getMin());
 
     xAxis.setMax((now.getData().size()) + 20);
     //xAxis.setMax(650);
