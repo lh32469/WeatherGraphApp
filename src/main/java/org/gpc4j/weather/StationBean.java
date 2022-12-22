@@ -132,6 +132,10 @@ public class StationBean {
         .map(Number::intValue)
         .orElse(0);
 
+    // Allow five degree spacing between edges.
+    yMax += 5;
+    yMin -= 5;
+
     // Ensure spread is large enough so graph doesn't look too choppy.
     while (yMax - yMin < 25) {
       yMin--;
@@ -141,7 +145,7 @@ public class StationBean {
     yAxis.setMax(yMax);
     yAxis.setMin(yMin);
     LOG.info("yAxis.getMax() = {}", yAxis.getMax());
-    LOG.info("yAxis.getMax() = {}", yAxis.getMin());
+    LOG.info("yAxis.getMin() = {}", yAxis.getMin());
 
     xAxis.setMax((now.getData().size()) + 20);
     //xAxis.setMax(650);
