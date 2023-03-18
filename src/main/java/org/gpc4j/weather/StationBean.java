@@ -83,7 +83,7 @@ public class StationBean {
     List<String> times = (List<String>) observations.get("date_time");
 
     tempGraph = new LineChartModel();
-    tempGraph.setTitle("Temperature");
+    tempGraph.setTitle("Temperature (" + station + ")");
     tempGraph.setLegendPosition("n");
 
     Axis xAxis = tempGraph.getAxis(AxisType.X);
